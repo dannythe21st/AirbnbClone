@@ -1,0 +1,244 @@
+
+config:
+  target: 'https://scc2324-lab1-60441.azurewebsites.net/rest'
+  
+  plugins:
+    metrics-by-endpoint: 
+      useOnlyRequestNames: true
+  
+  processor: "./test-utils.js"
+  
+  variables:
+    metricsProcessEndpoint : "myProcessEndpoint"
+  
+  phases:
+  - name: "Warm up"    
+    duration: 20
+    arrivalCount: 5
+  - name: "Main test"    
+    duration: 60
+    arrivalCount: 10          
+
+scenarios:
+  - name: 'Main Line of our app'
+    weight: 7
+    flow:
+      - function: "selectUserSkewed"
+      - post:                        
+          url: "/user/login"
+          name: "POST:/user/login"
+          headers:
+            Content-Type: application/json
+          json:
+            username: "{{ userid }}"
+            pwd: "{{ pwd }}"
+      - get:                          
+          url: "/house/list?page=0&elements=20"
+          name: "GET:/*/houses"
+          headers:
+            Accept: application/json
+          afterResponse: "getHousesList"
+      - function: "selectHouse"
+      - get:                        
+          url: "/house/discounts?page=0&elements=20"
+          name: "GET:/houses/?discount=1"
+          headers:
+            Accept: application/json
+          capture: 
+            json: "$"
+            as: "housesDiscountLst"
+      - function: "setQuestion"
+      - post:
+          url: "/house/question"
+          name: "POST:/house/question"
+          headers:
+            Content-Type: application/json
+          json:
+            id: "{{ questionid }}"
+            title: "{{ title }}"
+            description: "{{ description }}"
+            askerId: "{{ userid }}"
+            houseId: "{{ houseid }}"
+            reply: ""
+      - get:
+          url: "/house/{{ houseid }}/questions?page=0&elements=20"
+          name: "GET:/house/*/questions"
+          headers:
+            Accept: application/json
+          capture: 
+            json: "$"
+            as: "questionsLst"
+      - function: "searchAvailableHouses"
+      - get:
+          url: "/house/available?page=0&elements=20&inicialDate={{ initialDateISO }}&finalDate={{ finalDateISO }}&location={{ location }}"
+          name: "get: /house/available"
+          capture:
+            json: "$"
+            as: "availableHousesLst"
+          beforeResponse: 'console.log("Available Houses List:", {{ initialDateISO }});'
+      - post:
+          url: "/house/rental"
+          name: "post:/rental"
+          headers:
+            Accept: application/json
+          json:
+            id: "{{ availableHousesLst[0].id }}"
+            price: "{{ availableHousesLst[0].price }}"
+            houseId: "{{ availableHousesLst[0].id }}"
+            renterId: "{{ userid }}"
+            location: "{{ availableHousesLst[0].location }}"
+            inicial_date: "{{ initialDate }}"
+            final_date: "{{ finalDate }}"
+
+  - name: 'user methods + admin'
+    weight: 1
+    flow:
+      - post:                        
+          url: "/user/login"
+          name: "POST:/user/login"
+          headers:
+            Content-Type: application/json
+          json:
+            username: "admin"
+            pwd: "1234"
+      - get:
+          url: "/user/list?page=0&elements=20"
+          name: "get: /user/list"
+          capture: 
+            json: "$"
+            as: "usersLst"
+      - get:
+          url: "/user/getMostRecentUsers"
+          name: "get: /user/list"
+          capture: 
+            json: "$"
+            as: "recentUsersLst"
+      - put:                        
+          url: "/user"
+          name: "put:/user"
+          headers:
+            Content-Type: application/json
+          json:
+            id: "admin"
+            pwd: "1234"
+            photoId: ""
+            name: "nome mudado"
+
+
+  - name: 'house methods'
+    weight: 1
+    flow:
+      - post:                        
+          url: "/user/login"
+          name: "POST:/user/login"
+          headers:
+            Content-Type: application/json
+          json:
+            username: "deugenio"
+            pwd: "1234"
+      - get:
+          url: "/house/user/deugenio?page=0&elements=5"
+          name: "get:/house/user/list"
+          capture:
+            json: "$"
+            as: "housesLst"
+      - put:
+          url: "/house/toggleDiscount/House1Test?toggle=false"
+          name: "put: /house/toggleDiscount"
+      - put:
+          url: "/house/update"
+          name: "put: /house/update"
+          headers:
+            Content-Type: application/json
+          json:
+            id: "House3Test"
+            name: "T5 novo"
+            location: "Mem-Martins"
+            description: "com vista para o Palacio da Pena"
+            photoIds: []
+            price: 30.0
+            discount_price: 25.0
+            ownerId: "deugenio"
+            onDiscount: false
+      - get:
+          url: "/house/get/House1Test"
+          name: "get:/house/get"
+          capture:
+            json: "$"
+            as: "house1"
+      - get:
+          url: "/house/discounts?page=0&elements=5"
+          name: "get:/house/discount/list"
+          capture:
+            json: "$"
+            as: "housesDiscLst"
+      - get:
+          url: "/house/location/Cacém?page=0&elements=5"
+          name: "get:/house/loc"
+          capture:
+            json: "$"
+            as: "housesByLocLst"
+
+  - name: 'questions + rentals'
+    weight: 1
+    flow: 
+      - function: "selectUserSkewed"
+      - post:                        
+          url: "/user/login"
+          name: "POST:/user/login"
+          headers:
+            Content-Type: application/json
+          json:
+            username: "{{ userid }}"
+            pwd: "{{ pwd }}"
+      - get:
+          url: "/house/user/{{ userid }}?page=0&elements=5"
+          name: "get: /house/user"
+          capture: 
+            json: "$"
+            as: "myHouses"         
+      - get:                          
+          url: "/house/{{ myHouses[0].id }}/listrental?page=0&elements=20"
+          name: "GET:/house/*/rentals"
+          headers:
+            Accept: application/json
+          capture: 
+            json: "$"
+            as: "rentalsLst"
+      - get:
+          url: "/house/{{ myHouses[0].id }}/questions?page=0&elements=20"
+          name: "GET:/house/*/questions"
+          headers:
+            Accept: application/json
+          capture: 
+            json: "$"
+            as: "questionsLst"
+          afterResponse: 'console.log("Available Houses List:", {{ questionsLst }});'
+      - loop:                                
+        - post:
+            url: "/house/question/replyTo/{{ $loopElement.id }}"
+            name: "post:/reply"
+            headers:
+              Content-Type: text/plain
+            body: "test reply to this question"
+        over: "questionsLst"
+
+  - name: 'cog test'
+    weight: 1
+    flow:
+      - function: "selectUserSkewed"
+      - post:                        
+          url: "/user/login"
+          name: "POST:/user/login"
+          headers:
+            Content-Type: application/json
+          json:
+            username: "{{ userid }}"
+            pwd: "{{ pwd }}"
+      - function: "setText"
+      - get:
+          url: "/cog?text={{ text }}"
+          name: "get: /cog"
+          capture: 
+            json: "$"
+            as: "housesLst"

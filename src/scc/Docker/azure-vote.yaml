@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scc2324-59797-60441-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scc2324-59797-60441-redis
+  template:
+    metadata:
+      labels:
+        app: scc2324-59797-60441-redis
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: scc2324-59797-60441-redis
+        image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+        env:
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+        ports:
+        - containerPort: 6379
+          name: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scc2324-59797-60441-redis
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: scc2324-59797-60441-redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scc2324-59797-60441-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scc2324-59797-60441-app
+  template:
+    metadata:
+      labels:
+        app: scc2324-59797-60441-app
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: scc2324-59797-60441-app
+        image: rcosta349/scc2324-59797-60441:latest
+        imagePullPolicy: "Always"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REDIS_HOSTNAME
+          value: "scc2324-59797-60441-redis"
+        - name: CONNECTION_URL
+          value: "https://scc2324-59797-60441.documents.azure.com:443/"
+        - name: CONNECTION_STRING
+          value: "DefaultEndpointsProtocol=https;AccountName=scc2324n60441;AccountKey=5eAL6iEpxELZFPlJrjLK2C7Sw0tpcm4+9vhhf9C6hB/hhiyAh1MUmkgtcRmRQY8FIJ5qcuxY1BcS+AStvS6iYQ==;EndpointSuffix=core.windows.net"
+        - name: PROP_SERVICE_NAME
+          value: "scc2324-cog-az"
+        - name: PROP_QUERY_KEY
+          value: "HAP8cGQIb9XIxHxa5ltfbXABhPruNNsqgipA7McJj3AzSeDDBDkz"
+        - name: DB_KEY
+          value: "8JlrURJrI4kmdUOYOIrPJFrsnxFqZC4zvTRM9gvQC9E7P1gKEfIa01L2hyDAFLqtkPggi2J1Bcj7ACDbFeEY7w=="
+        - name: DB_NAME
+          value: "scc2324-59797-60441"
+        - name: PROP_SERVICE_URL
+          value: "https://scc2324-cog-az.search.windows.net/"
+        - name: PROP_INDEX_NAME
+          value: "cosmosdb-index"
+        - name: MEDIA_DIRECTORY
+          value: "/mnt/vol"
+        - name: AZURE_MANAGED_DISK_ENABLED
+          value: "true"
+        volumeMounts:
+          - name: mediavolume
+            mountPath: "/mnt/vol"
+      volumes:
+        - name: mediavolume
+          persistentVolumeClaim:
+            claimName: azure-managed-disk
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scc2324-59797-60441-app
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8080
+  selector:
+    app: scc2324-59797-60441-app
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-managed-disk
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 1Gi
+---

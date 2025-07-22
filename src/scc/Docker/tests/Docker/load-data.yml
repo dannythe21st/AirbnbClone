@@ -1,0 +1,99 @@
+config:
+  target: 'https://20.166.161.60:8080/scc2324-lab1-1.0/rest'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+  processor: "./test-utils.js"
+  variables:
+     metricsProcessEndpoint : "myProcessEndpoint"  # function used to aggregate endpoints for statistics
+  phases:
+  - name: "Create users"    # Create users
+    duration: 1
+    arrivalCount: 1
+
+scenarios:
+  - name: 'Create Data'
+    weight: 1
+    flow:
+      - loop:                           
+        - function: "genNewUser"        
+        - post:
+            url: "/user/create"
+            headers:
+              Content-Type: application/json
+              Accept: application/json
+            json:
+              id: "{{ userid }}"
+              name: "{{ name }}"
+              pwd: "{{ pwd }}"
+              photoId: ""
+            afterResponse: "genNewUserReply"    
+        - post:
+            url: "/user/login"
+            headers:
+              Content-Type: application/json
+            json:
+              username: "{{ userid }}"
+              pwd: "{{ pwd }}"
+        - post:                          
+            url: "/media/user/{{ userid }}"
+            headers:
+              Content-Type: application/octet-stream
+              Accept: application/json
+            beforeRequest: "uploadImageBody"
+        count: 100
+      - loop:
+        - function: "selectUserSkewed"
+        - post:
+            url: "/user/login"
+            headers:
+              Content-Type: application/json
+            json:
+              username: "{{ userid }}"
+              pwd: "{{ pwd }}"                              
+        - function: "genNewHouse"         
+        - post:
+            url: "/house/create"
+            headers:
+                Content-Type: application/json
+                Accept: application/json
+            json:
+                id: "{{ houseid }}"
+                name: "{{ name }}"
+                location: "{{ location }}"
+                description: "{{ description }}"
+                ownerId: "{{ userid }}"
+                photoIds: []
+                price: "{{ price }}"
+                discount_price: "{{ discount }}"
+                onDiscount: "{{ onDiscount }}"
+            capture:
+              json: "$"
+              as: house
+        - post:                          
+              url: "/media/house/{{ house.id }}"
+              headers:
+                Content-Type: application/octet-stream
+                Accept: application/json
+              beforeRequest: "uploadImageBody" 
+        count: 200
+      
+      
+
+  - name: "Delete Data"
+    weight: 0
+    flow:
+      - loop:
+        - function: "selectUserDelete"
+        - post:
+            url: "/user/login"
+            headers:
+              Content-Type: application/json
+            json:
+              username: "{{ userid }}"
+              pwd: "{{ pwd }}"
+        - delete:
+            url: "/user/delete"
+            afterRequest: "deleteReply"
+        count: 100
+      
