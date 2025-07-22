@@ -76,13 +76,13 @@ spec:
         - name: CONNECTION_URL
           value: "https://scc2324-59797-60441.documents.azure.com:443/"
         - name: CONNECTION_STRING
-          value: "DefaultEndpointsProtocol=https;AccountName=scc2324n60441;AccountKey=5eAL6iEpxELZFPlJrjLK2C7Sw0tpcm4+9vhhf9C6hB/hhiyAh1MUmkgtcRmRQY8FIJ5qcuxY1BcS+AStvS6iYQ==;EndpointSuffix=core.windows.net"
+          value: "DefaultEndpointsProtocol="
         - name: PROP_SERVICE_NAME
           value: "scc2324-cog-az"
         - name: PROP_QUERY_KEY
-          value: "HAP8cGQIb9XIxHxa5ltfbXABhPruNNsqgipA7McJj3AzSeDDBDkz"
+          value: ""
         - name: DB_KEY
-          value: "8JlrURJrI4kmdUOYOIrPJFrsnxFqZC4zvTRM9gvQC9E7P1gKEfIa01L2hyDAFLqtkPggi2J1Bcj7ACDbFeEY7w=="
+          value: ""
         - name: DB_NAME
           value: "scc2324-59797-60441"
         - name: PROP_SERVICE_URL
