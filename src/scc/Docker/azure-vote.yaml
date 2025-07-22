@@ -71,28 +71,28 @@ spec:
         ports:
         - containerPort: 8080
         env:
-        - name: REDIS_HOSTNAME
-          value: "scc2324-59797-60441-redis"
-        - name: CONNECTION_URL
-          value: "https://scc2324-59797-60441.documents.azure.com:443/"
-        - name: CONNECTION_STRING
-          value: ""
-        - name: PROP_SERVICE_NAME
-          value: "scc2324-cog-az"
-        - name: PROP_QUERY_KEY
-          value: ""
-        - name: DB_KEY
-          value: ""
-        - name: DB_NAME
-          value: "scc2324-59797-60441"
-        - name: PROP_SERVICE_URL
-          value: "https://scc2324-cog-az.search.windows.net/"
-        - name: PROP_INDEX_NAME
-          value: "cosmosdb-index"
-        - name: MEDIA_DIRECTORY
-          value: "/mnt/vol"
-        - name: AZURE_MANAGED_DISK_ENABLED
-          value: "true"
+        # - name: REDIS_HOSTNAME
+        #   value: ""
+        # - name: CONNECTION_URL
+        #   value: ""
+        # - name: CONNECTION_STRING
+        #   value: ""
+        # - name: PROP_SERVICE_NAME
+        #   value: ""
+        # - name: PROP_QUERY_KEY
+        #   value: ""
+        # - name: DB_KEY
+        #   value: ""
+        # - name: DB_NAME
+        #   value: "scc2324-59797-60441"
+        # - name: PROP_SERVICE_URL
+        #   value: ""
+        # - name: PROP_INDEX_NAME
+        #   value: "cosmosdb-index"
+        # - name: MEDIA_DIRECTORY
+        #   value: "/mnt/vol"
+        # - name: AZURE_MANAGED_DISK_ENABLED
+        #   value: "true"
         volumeMounts:
           - name: mediavolume
             mountPath: "/mnt/vol"
