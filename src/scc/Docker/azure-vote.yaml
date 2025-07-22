@@ -76,7 +76,7 @@ spec:
         - name: CONNECTION_URL
           value: "https://scc2324-59797-60441.documents.azure.com:443/"
         - name: CONNECTION_STRING
-          value: "DefaultEndpointsProtocol="
+          value: ""
         - name: PROP_SERVICE_NAME
           value: "scc2324-cog-az"
         - name: PROP_QUERY_KEY
